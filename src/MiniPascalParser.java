@@ -1,4 +1,5 @@
 // Generated from MiniPascal.g4 by ANTLR 4.13.2
+package parser;
 import org.antlr.v4.runtime.atn.*;
 import org.antlr.v4.runtime.dfa.DFA;
 import org.antlr.v4.runtime.*;
