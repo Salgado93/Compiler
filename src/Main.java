@@ -9,9 +9,10 @@ public class Main {
     public static void main(String[] args) throws Exception {
         // Leer archivo fuente
         CharStream input = CharStreams.fromFileName("program.pas");
+        CharStream lowerInput = new CaseInsensitiveStream(input);
 
         // Lexer
-        MiniPascalLexer lexer = new MiniPascalLexer(input);
+        MiniPascalLexer lexer = new MiniPascalLexer(lowerInput);
         CommonTokenStream tokens = new CommonTokenStream(lexer);
 
         // Mostrar análisis léxico

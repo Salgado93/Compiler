@@ -17,4 +17,12 @@ public class WriteNode implements ASTNode {
             return "Write(\"" + message + "\")";
         }
     }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public ASTNode getVariable() {
+        return variable;
+    }
 }

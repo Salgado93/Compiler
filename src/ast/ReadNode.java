@@ -1,15 +1,18 @@
 package ast;
 
 public class ReadNode implements ASTNode {
-    private final String variableName;
+    private final ASTNode variable;
 
-    public ReadNode(String variableName) {
-        this.variableName = variableName;
+    public ReadNode(ASTNode variable) {
+        this.variable = variable;
     }
 
     @Override
     public String toString() {
-        return "Read(" + variableName + ")";
+        return "Read(" + variable + ")";
+    }
+
+    public ASTNode getVariable() {
+        return variable;
     }
 }
-

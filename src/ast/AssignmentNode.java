@@ -1,24 +1,24 @@
 package ast;
 
 public class AssignmentNode implements ASTNode {
-    private final String variable;
-    private final ASTNode expression;
+    private final ASTNode variable;
+    private final ASTNode value;
 
-    public AssignmentNode(String variable, ASTNode expression) {
+    public AssignmentNode(ASTNode variable, ASTNode value) {
         this.variable = variable;
-        this.expression = expression;
-    }
-
-    public String getVariable() {
-        return variable;
-    }
-
-    public ASTNode getExpression() {
-        return expression;
+        this.value = value;
     }
 
     @Override
     public String toString() {
-        return "Assign(" + variable + " := " + expression + ")";
+        return "Assign(" + variable + " := " + value + ")";
+    }
+
+    public ASTNode getVariable() {
+        return variable;
+    }
+
+    public ASTNode getValue() {
+        return value;
     }
 }

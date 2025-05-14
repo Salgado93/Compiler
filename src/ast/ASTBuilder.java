@@ -32,16 +32,11 @@ public class ASTBuilder extends MiniPascalBaseVisitor<ASTNode> {
         return new BlockNode(statements);
     }
 
-
     @Override
     public ASTNode visitAssignment(MiniPascalParser.AssignmentContext ctx) {
-        String varName = ctx.ID().getText();
-
-        // Obtener la última expr() → la del lado derecho de :=
-        List<MiniPascalParser.ExprContext> exprs = ctx.expr();
-        ASTNode value = visit(exprs.get(exprs.size() - 1)); // la última es la expresión asignada
-
-        return new AssignmentNode(varName, value);
+        ASTNode variable = visit(ctx.variable());
+        ASTNode value = visit(ctx.expr());
+        return new AssignmentNode(variable, value);
     }
 
     @Override
@@ -58,43 +53,56 @@ public class ASTBuilder extends MiniPascalBaseVisitor<ASTNode> {
 
     @Override
     public ASTNode visitFactor(MiniPascalParser.FactorContext ctx) {
-        if (ctx.NUM() != null) {
-            return new LiteralNode(Integer.parseInt(ctx.NUM().getText()));
+        if (ctx.NUMBER() != null) {
+            return new LiteralNode(Integer.parseInt(ctx.NUMBER().getText()));
+        } else if (ctx.CHAR_LITERAL() != null) {
+            String raw = ctx.CHAR_LITERAL().getText();
+            return new LiteralNode(raw.charAt(1));
         } else if (ctx.STRING_LITERAL() != null) {
-            // Elimina las comillas
             String raw = ctx.STRING_LITERAL().getText();
             return new LiteralNode(raw.substring(1, raw.length() - 1));
         } else if (ctx.TRUE() != null) {
             return new LiteralNode(true);
         } else if (ctx.FALSE() != null) {
             return new LiteralNode(false);
-        } else if (ctx.ID() != null && ctx.expr().isEmpty()) {
-            return new VariableNode(ctx.ID().getText());  // solo ID
-        } else if (ctx.ID() != null && !ctx.expr().isEmpty()) {
-            // Acceso a arreglo: ID [expr (, expr)?]
-            String id = ctx.ID().getText();
+        } else if (ctx.expr(0) != null) {
+            return visit(ctx.expr(0));
+        } else if (ctx.NOT() != null) {
+            return new UnaryOpNode("not", visit(ctx.factor()));
+        } else if (ctx.variable() != null) {
+            return visit(ctx.variable());
+        }
+
+        return null;
+    }
+
+    @Override
+    public ASTNode visitVariable(MiniPascalParser.VariableContext ctx) {
+        String name = ctx.ID().getText();
+
+        if (ctx.expr().isEmpty()) {
+            return new VariableNode(name);
+        } else {
             List<ASTNode> indices = new ArrayList<>();
             for (var exprCtx : ctx.expr()) {
                 indices.add(visit(exprCtx));
             }
-            return new ArrayAccessNode(id, indices); // si tienes esta clase
-        } else if (ctx.expr().size() == 1) {
-            return visit(ctx.expr(0));  // (expr)
-        } else if (ctx.NOT() != null) {
-            return new UnaryOpNode("not", visit(ctx.factor()));
+            return new ArrayAccessNode(name, indices);
         }
-
-        return null; // fallback
     }
 
     @Override
     public ASTNode visitWriteStatement(MiniPascalParser.WriteStatementContext ctx) {
+        if (ctx.getChildCount() == 1 && ctx.WRITELN() != null) {
+            return new WriteLineNode();
+        }
+
         String text = ctx.STRING_LITERAL().getText();
-        text = text.substring(1, text.length() - 1); // eliminar comillas
+        text = text.substring(1, text.length() - 1); // quitar comillas
 
         ASTNode variable = null;
-        if (ctx.ID() != null) {
-            variable = new VariableNode(ctx.ID().getText());
+        if (ctx.expr() != null) {
+            variable = visit(ctx.expr());
         }
 
         return new WriteNode(text, variable);
@@ -102,13 +110,94 @@ public class ASTBuilder extends MiniPascalBaseVisitor<ASTNode> {
 
     @Override
     public ASTNode visitReadStatement(MiniPascalParser.ReadStatementContext ctx) {
-        String varName = ctx.ID().getText();
-        return new ReadNode(varName);
+        ASTNode variable = visit(ctx.variable());
+        return new ReadNode(variable);
     }
 
+    @Override
+    public ASTNode visitIfStatement(MiniPascalParser.IfStatementContext ctx) {
+        ASTNode condition = visit(ctx.expr());
+        ASTNode thenBranch = visit(ctx.statement(0));
+        ASTNode elseBranch = ctx.statement().size() > 1 ? visit(ctx.statement(1)) : null;
+        return new IfNode(condition, thenBranch, elseBranch);
+    }
 
+    @Override
+    public ASTNode visitWhileStatement(MiniPascalParser.WhileStatementContext ctx) {
+        ASTNode condition = visit(ctx.expr());
+        ASTNode body = visit(ctx.statement());
+        return new WhileNode(condition, body);
+    }
 
+    @Override
+    public ASTNode visitForStatement(MiniPascalParser.ForStatementContext ctx) {
+        String var = ctx.ID().getText();
+        ASTNode start = visit(ctx.expr(0));
+        ASTNode end = visit(ctx.expr(1));
+        boolean isTo = ctx.TO() != null;
+        ASTNode body = visit(ctx.statement());
+        return new ForNode(var, start, end, isTo, body);
+    }
 
-    // Agrega más métodos conforme necesites: visitIfStatement, visitWhileLoop, etc.
+    @Override
+    public ASTNode visitRepeatStatement(MiniPascalParser.RepeatStatementContext ctx) {
+        List<ASTNode> body = new ArrayList<>();
+        for (var stmtCtx : ctx.statementList().statement()) {
+            ASTNode stmt = visit(stmtCtx);
+            if (stmt != null) body.add(stmt);
+        }
+        ASTNode condition = visit(ctx.expr());
+        return new RepeatNode(body, condition);
+    }
+
+    @Override
+    public ASTNode visitFunctionCall(MiniPascalParser.FunctionCallContext ctx) {
+        String name = ctx.ID().getText();
+        List<ASTNode> args = new ArrayList<>();
+        if (ctx.expr() != null) {
+            for (var exprCtx : ctx.expr()) {
+                args.add(visit(exprCtx));
+            }
+        }
+        return new FunctionCallNode(name, args);
+    }
+
+    @Override
+    public ASTNode visitFunctionDecl(MiniPascalParser.FunctionDeclContext ctx) {
+        String name = ctx.ID().getText();
+        List<ParamNode> params = new ArrayList<>();
+
+        if (ctx.formalParams() != null) {
+            for (var paramCtx : ctx.formalParams().param()) {
+                boolean byRef = paramCtx.VAR() != null;
+                String type = paramCtx.baseType().getText();
+                for (var id : paramCtx.ID()) {
+                    params.add(new ParamNode(id.getText(), type, byRef));
+                }
+            }
+        }
+
+        String returnType = ctx.baseType().getText();
+        ASTNode body = visit(ctx.block());
+        return new FunctionDeclNode(name, params, returnType, body);
+    }
+
+    @Override
+    public ASTNode visitProcedureDecl(MiniPascalParser.ProcedureDeclContext ctx) {
+        String name = ctx.ID().getText();
+        List<ParamNode> params = new ArrayList<>();
+
+        if (ctx.formalParams() != null) {
+            for (var paramCtx : ctx.formalParams().param()) {
+                boolean byRef = paramCtx.VAR() != null;
+                String type = paramCtx.baseType().getText();
+                for (var id : paramCtx.ID()) {
+                    params.add(new ParamNode(id.getText(), type, byRef));
+                }
+            }
+        }
+
+        ASTNode body = visit(ctx.block());
+        return new ProcedureDeclNode(name, params, body);
+    }
 }
-

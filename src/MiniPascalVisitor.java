@@ -23,17 +23,11 @@ public interface MiniPascalVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitBlock(MiniPascalParser.BlockContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link MiniPascalParser#constDecl}.
+	 * Visit a parse tree produced by {@link MiniPascalParser#varDeclPart}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitConstDecl(MiniPascalParser.ConstDeclContext ctx);
-	/**
-	 * Visit a parse tree produced by {@link MiniPascalParser#constAssign}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitConstAssign(MiniPascalParser.ConstAssignContext ctx);
+	T visitVarDeclPart(MiniPascalParser.VarDeclPartContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link MiniPascalParser#varDecl}.
 	 * @param ctx the parse tree
@@ -41,41 +35,47 @@ public interface MiniPascalVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitVarDecl(MiniPascalParser.VarDeclContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link MiniPascalParser#varAssignDecl}.
+	 * Visit a parse tree produced by {@link MiniPascalParser#baseType}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitVarAssignDecl(MiniPascalParser.VarAssignDeclContext ctx);
+	T visitBaseType(MiniPascalParser.BaseTypeContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link MiniPascalParser#varAssign}.
+	 * Visit a parse tree produced by {@link MiniPascalParser#arrayType}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitVarAssign(MiniPascalParser.VarAssignContext ctx);
+	T visitArrayType(MiniPascalParser.ArrayTypeContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link MiniPascalParser#type}.
+	 * Visit a parse tree produced by {@link MiniPascalParser#range}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitType(MiniPascalParser.TypeContext ctx);
+	T visitRange(MiniPascalParser.RangeContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link MiniPascalParser#procDecl}.
+	 * Visit a parse tree produced by {@link MiniPascalParser#subprogramDeclPart}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitProcDecl(MiniPascalParser.ProcDeclContext ctx);
+	T visitSubprogramDeclPart(MiniPascalParser.SubprogramDeclPartContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link MiniPascalParser#funcDecl}.
+	 * Visit a parse tree produced by {@link MiniPascalParser#procedureDecl}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitFuncDecl(MiniPascalParser.FuncDeclContext ctx);
+	T visitProcedureDecl(MiniPascalParser.ProcedureDeclContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link MiniPascalParser#paramList}.
+	 * Visit a parse tree produced by {@link MiniPascalParser#functionDecl}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitParamList(MiniPascalParser.ParamListContext ctx);
+	T visitFunctionDecl(MiniPascalParser.FunctionDeclContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link MiniPascalParser#formalParams}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitFormalParams(MiniPascalParser.FormalParamsContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link MiniPascalParser#param}.
 	 * @param ctx the parse tree
@@ -119,23 +119,17 @@ public interface MiniPascalVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitWhileStatement(MiniPascalParser.WhileStatementContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link MiniPascalParser#repeatStatement}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitRepeatStatement(MiniPascalParser.RepeatStatementContext ctx);
-	/**
 	 * Visit a parse tree produced by {@link MiniPascalParser#forStatement}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
 	T visitForStatement(MiniPascalParser.ForStatementContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link MiniPascalParser#writeStatement}.
+	 * Visit a parse tree produced by {@link MiniPascalParser#repeatStatement}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitWriteStatement(MiniPascalParser.WriteStatementContext ctx);
+	T visitRepeatStatement(MiniPascalParser.RepeatStatementContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link MiniPascalParser#readStatement}.
 	 * @param ctx the parse tree
@@ -143,17 +137,17 @@ public interface MiniPascalVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitReadStatement(MiniPascalParser.ReadStatementContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link MiniPascalParser#condition}.
+	 * Visit a parse tree produced by {@link MiniPascalParser#writeStatement}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitCondition(MiniPascalParser.ConditionContext ctx);
+	T visitWriteStatement(MiniPascalParser.WriteStatementContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link MiniPascalParser#relOp}.
+	 * Visit a parse tree produced by {@link MiniPascalParser#functionCall}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitRelOp(MiniPascalParser.RelOpContext ctx);
+	T visitFunctionCall(MiniPascalParser.FunctionCallContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link MiniPascalParser#expr}.
 	 * @param ctx the parse tree
@@ -178,4 +172,10 @@ public interface MiniPascalVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitFactor(MiniPascalParser.FactorContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link MiniPascalParser#variable}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitVariable(MiniPascalParser.VariableContext ctx);
 }
